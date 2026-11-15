@@ -1,4 +1,23 @@
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || '/api/v1';
+export function resolveApiUrl(endpoint: string): string {
+  if (endpoint.startsWith('http')) return endpoint;
+
+  let base = '/api/v1';
+  const envUrl = process.env.NEXT_PUBLIC_API_URL;
+  if (envUrl && !envUrl.includes('sisfortress.cyber')) {
+    if (typeof window !== 'undefined') {
+      const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+      if (isLocal || !envUrl.includes('localhost')) {
+        base = envUrl;
+      }
+    } else {
+      base = envUrl;
+    }
+  }
+
+  const cleanBase = base.replace(/\/$/, '');
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${cleanBase}${cleanEndpoint}`;
+}
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -56,7 +75,7 @@ export async function apiClient<T = any>(
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  const url = endpoint.startsWith('http') ? endpoint : `${API_BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
+  const url = resolveApiUrl(endpoint);
 
   const response = await fetch(url, {
     ...options,
