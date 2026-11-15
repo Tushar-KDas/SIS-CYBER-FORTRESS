@@ -28,16 +28,41 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<AuthUser | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const cached = localStorage.getItem('sis_user');
+        if (cached) return JSON.parse(cached);
+      } catch (e) {}
+    }
+    return null;
+  });
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  const updateUserData = (u: AuthUser | null) => {
+    setUser(u);
+    if (typeof window !== 'undefined') {
+      if (u) {
+        localStorage.setItem('sis_user', JSON.stringify(u));
+      } else {
+        localStorage.removeItem('sis_user');
+      }
+    }
+  };
+
   const refreshUser = async () => {
+    const token = getAuthToken();
+    if (!token) {
+      updateUserData(null);
+      setIsLoading(false);
+      return;
+    }
     try {
       const profile = await apiClient<AuthUser>('/auth/me');
-      setUser(profile);
+      updateUserData(profile);
     } catch (e) {
-      setUser(null);
+      updateUserData(null);
       setAuthToken(null);
     } finally {
       setIsLoading(false);
@@ -56,7 +81,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (res.accessToken) {
       setAuthToken(res.accessToken);
-      setUser(res.user);
+      updateUserData(res.user);
     }
     return res;
   };
@@ -74,7 +99,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (e) {
       // Ignore
     } finally {
-      setUser(null);
+      updateUserData(null);
       setAuthToken(null);
       router.push('/login');
     }

@@ -26,6 +26,10 @@ export default function AuditorDashboard() {
 
   useEffect(() => {
     if (!isLoading) {
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('sis_jwt_token') || sessionStorage.getItem('sis_jwt_token')) : null;
+      if (!user && token) {
+        return;
+      }
       if (!user || (!user.roles.includes('AUDITOR') && !user.roles.includes('SUPER_ADMIN'))) {
         router.push('/unauthorized');
         return;

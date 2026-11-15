@@ -36,6 +36,10 @@ export default function SuperAdminDashboard() {
 
   useEffect(() => {
     if (!isLoading) {
+      const token = typeof window !== 'undefined' ? (localStorage.getItem('sis_jwt_token') || sessionStorage.getItem('sis_jwt_token')) : null;
+      if (!user && token) {
+        return; // Token present, waiting for user state hydration
+      }
       if (!user || !user.roles.includes('SUPER_ADMIN')) {
         router.push('/unauthorized');
         return;

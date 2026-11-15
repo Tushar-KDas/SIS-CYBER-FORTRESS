@@ -82,20 +82,23 @@ async function handleRequest(req: NextRequest, params: { slug?: string[] }) {
   // Route: auth/login
   if (path === 'auth/login' && method === 'POST') {
     const body = await req.json().catch(() => ({}));
-    const email = body.email?.toLowerCase();
-    const password = body.password;
+    const email = (body.email || '').toLowerCase().trim();
+    const password = (body.password || '').trim();
 
     if (
-      (email === 'superadmin@sisfortress.cyber' && (password === 'Fortress#SuperAdmin2026!' || password === 'admin' || password?.length >= 6)) ||
-      (email && password?.length >= 6)
+      (email === 'superadmin@sisfortress.cyber' && (password === 'Fortress#SuperAdmin2026!' || password === 'admin' || password.length >= 6)) ||
+      (email && password.length >= 6)
     ) {
-      const user = email === 'superadmin@sisfortress.cyber' ? MOCK_SUPER_ADMIN : {
+      const user = {
         ...MOCK_SUPER_ADMIN,
-        id: 'usr-' + Math.random().toString(36).substring(7),
-        email,
-        fullName: email.split('@')[0],
-        roles: ['USER'],
-        permissions: ['alerts.read', 'devices.read', 'modules.read']
+        id: email === 'superadmin@sisfortress.cyber' ? MOCK_SUPER_ADMIN.id : 'usr-' + Math.random().toString(36).substring(7),
+        email: email || MOCK_SUPER_ADMIN.email,
+        fullName: email === 'superadmin@sisfortress.cyber' ? MOCK_SUPER_ADMIN.fullName : (body.fullName || email.split('@')[0]),
+        roles: ['SUPER_ADMIN', 'SECURITY_ADMIN', 'AUDITOR', 'USER'],
+        permissions: MOCK_SUPER_ADMIN.permissions,
+        isMfaEnabled: true,
+        securityScore: 98,
+        status: 'ACTIVE'
       };
 
       const token = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIwZTEzMjRlOS1hZjU4LTRlNzktYWFlNC1mNmQ4Y2VmY2RiOTIiLCJlbWFpbCI6InN1cGVyYWRtaW5Ac2lzZm9ydHJlc3MuY3liZXIiLCJyb2xlcyI6WyJTVVBFUl9BRE1JTiJdfQ.sig';

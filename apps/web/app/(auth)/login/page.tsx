@@ -34,13 +34,13 @@ export default function LoginPage() {
       // Check primary role for redirection
       const roles = res.user?.roles || [];
       if (roles.includes('SUPER_ADMIN')) {
-        router.push('/admin/super-admin');
+        window.location.href = '/admin/super-admin';
       } else if (roles.includes('SECURITY_ADMIN')) {
-        router.push('/admin/security-admin');
+        window.location.href = '/admin/security-admin';
       } else if (roles.includes('AUDITOR')) {
-        router.push('/admin/auditor');
+        window.location.href = '/admin/auditor';
       } else {
-        router.push('/dashboard/overview');
+        window.location.href = '/dashboard/overview';
       }
     } catch (err: any) {
       setError(err?.message || 'Authentication failed. Please verify credentials.');

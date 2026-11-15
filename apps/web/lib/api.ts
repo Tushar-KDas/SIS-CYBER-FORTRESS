@@ -24,8 +24,10 @@ export const setAuthToken = (token: string | null) => {
   storedToken = token;
   if (typeof window !== 'undefined') {
     if (token) {
+      localStorage.setItem('sis_jwt_token', token);
       sessionStorage.setItem('sis_jwt_token', token);
     } else {
+      localStorage.removeItem('sis_jwt_token');
       sessionStorage.removeItem('sis_jwt_token');
     }
   }
@@ -34,7 +36,7 @@ export const setAuthToken = (token: string | null) => {
 export const getAuthToken = (): string | null => {
   if (storedToken) return storedToken;
   if (typeof window !== 'undefined') {
-    return sessionStorage.getItem('sis_jwt_token');
+    return localStorage.getItem('sis_jwt_token') || sessionStorage.getItem('sis_jwt_token');
   }
   return null;
 };
