@@ -1,0 +1,687 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// ==========================================
+// 1. IDENTITY & ACCESS MANAGEMENT (RBAC)
+// ==========================================
+
+enum UserRoleType {
+  SUPER_ADMIN
+  SECURITY_ADMIN
+  MODULE_ADMIN
+  AUDITOR
+  USER
+}
+
+enum UserAccountStatus {
+  ACTIVE
+  PENDING_VERIFICATION
+  SUSPENDED
+  DEACTIVATED
+}
+
+model User {
+  id               String            @id @default(uuid())
+  email            String            @unique
+  passwordHash     String
+  fullName         String
+  status           UserAccountStatus @default(ACTIVE)
+  isMfaEnabled     Boolean           @default(false)
+  securityScore    Int               @default(85)
+  lastLoginAt      DateTime?
+  lastLoginIp      String?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  // Relations
+  userRoles          UserRole[]
+  moduleAssignments  ModuleAssignment[]
+  sessions           Session[]
+  mfaFactors         MfaFactor[]
+  loginEvents        LoginEvent[]
+  devices            Device[]
+  vaultItems         VaultItem[]
+  forensicCases      ForensicCase[]       @relation("LeadInvestigator")
+  uploadedEvidence   EvidenceRecord[]     @relation("EvidenceUploader")
+  custodyEventsActor CustodyEvent[]       @relation("CustodyActor")
+  assignedIncidents  IncidentAssignment[] @relation("AssignedIncidentUser")
+  incidentNotes      IncidentNote[]
+  notifications      Notification[]
+  auditLogs          AuditLog[]
+  webAssets          Asset[]
+
+  @@index([email, status])
+}
+
+model Role {
+  id          String           @id @default(uuid())
+  name        String           @unique
+  displayName String
+  description String?
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  name        String
+  description String?
+  moduleKey   String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions RolePermission[]
+}
+
+model UserRole {
+  id        String   @id @default(uuid())
+  userId    String
+  roleId    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roleId])
+  @@index([userId])
+  @@index([roleId])
+}
+
+model RolePermission {
+  id           String   @id @default(uuid())
+  roleId       String
+  permissionId String
+  createdAt    DateTime @default(now())
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model ModuleAssignment {
+  id        String   @id @default(uuid())
+  userId    String
+  moduleKey String
+  canWrite  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, moduleKey])
+  @@index([userId])
+  @@index([moduleKey])
+}
+
+model Session {
+  id           String   @id @default(uuid())
+  userId       String
+  token        String   @unique
+  userAgent    String?
+  ipAddress    String?
+  deviceType   String?
+  isRevoked    Boolean  @default(false)
+  expiresAt    DateTime
+  lastActiveAt DateTime @default(now())
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRevoked])
+  @@index([token])
+}
+
+model MfaFactor {
+  id          String   @id @default(uuid())
+  userId      String
+  type        String   @default("TOTP") // TOTP, WEBAUTHN
+  secret      String
+  isVerified  Boolean  @default(false)
+  backupCodes String? // JSON encoded or hashed backup codes
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model LoginEvent {
+  id          String   @id @default(uuid())
+  userId      String?
+  email       String
+  isSuccess   Boolean
+  failReason  String?
+  ipAddress   String?
+  userAgent   String?
+  location    String?
+  isSuspicious Boolean @default(false)
+  timestamp   DateTime @default(now())
+
+  user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([email, timestamp])
+  @@index([isSuspicious])
+}
+
+// ==========================================
+// 2. DEVICE & ASSET REGISTRY DOMAIN
+// ==========================================
+
+enum DevicePlatform {
+  WINDOWS
+  MACOS
+  LINUX
+  ANDROID
+  IOS
+  UNKNOWN
+}
+
+enum DeviceStatus {
+  ACTIVE
+  OFFLINE
+  COMPROMISED
+  AWAITING_SYNC
+}
+
+model Device {
+  id            String         @id @default(uuid())
+  userId        String
+  name          String
+  platform      DevicePlatform @default(WINDOWS)
+  osVersion     String
+  ipAddress     String?
+  macAddress    String?
+  status        DeviceStatus   @default(ACTIVE)
+  securityScore Int            @default(90)
+  lastSeenAt    DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  snapshots     DeviceSnapshot[]
+  networkSnapshots NetworkSnapshot[]
+
+  @@index([userId])
+  @@index([platform, status])
+}
+
+model DeviceSnapshot {
+  id              String   @id @default(uuid())
+  deviceId        String
+  antivirusActive Boolean  @default(true)
+  firewallActive  Boolean  @default(true)
+  diskEncrypted   Boolean  @default(true)
+  patchLevel      String?
+  batteryLevel    Int?
+  rawTelemetry    String?  // JSON string
+  timestamp       DateTime @default(now())
+
+  device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+
+  @@index([deviceId, timestamp])
+}
+
+model NetworkSnapshot {
+  id               String   @id @default(uuid())
+  deviceId         String?
+  ssid             String?
+  bssid            String?
+  securityProtocol String   @default("WPA2")
+  isCaptivePortal  Boolean  @default(false)
+  isPublic         Boolean  @default(false)
+  riskScore        Int      @default(10)
+  warnings         String?  // JSON array
+  timestamp        DateTime @default(now())
+
+  device Device? @relation(fields: [deviceId], references: [id], onDelete: SetNull)
+
+  @@index([deviceId, timestamp])
+}
+
+model Asset {
+  id                  String   @id @default(uuid())
+  userId              String
+  domain              String   @unique
+  organizationName    String?
+  isVerified          Boolean  @default(false)
+  verificationMethod  String   @default("DNS_TXT") // DNS_TXT, HTTP_META
+  verificationToken   String
+  sslStatus           String   @default("UNKNOWN") // VALID, EXPIRED, MISCONFIGURED, UNKNOWN
+  sslExpiresAt        DateTime?
+  lastScannedAt       DateTime?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  webScans WebScan[]
+
+  @@index([userId])
+  @@index([domain, isVerified])
+}
+
+// ==========================================
+// 3. 12 CYBERSECURITY MODULES DOMAIN
+// ==========================================
+
+model SecurityModule {
+  id           String   @id @default(uuid())
+  key          String   @unique
+  name         String
+  tagline      String
+  description  String
+  icon         String
+  category     String
+  status       String   @default("Active")
+  version      String   @default("1.0.0")
+  capabilities String   // JSON array
+  settingsJson String?  // JSON object
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  activities ModuleActivity[]
+}
+
+model ModuleActivity {
+  id        String   @id @default(uuid())
+  moduleKey String
+  action    String
+  actorId   String?
+  summary   String
+  metadata  String?  // JSON
+  timestamp DateTime @default(now())
+
+  module SecurityModule @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+
+  @@index([moduleKey, timestamp])
+}
+
+// Module 02: Phishing Shield
+model PhishingScan {
+  id               String   @id @default(uuid())
+  url              String
+  domain           String
+  riskLevel        String   @default("Unknown") // Safe, Suspicious, Malicious, Unknown
+  threatCategory   String?  // Credential Harvesting, Malware, Scam, None
+  confidenceScore  Int      @default(0)
+  heuristicsJson   String?  // JSON
+  externalSource   String?
+  scannedByUserId  String?
+  createdAt        DateTime @default(now())
+
+  @@index([domain, riskLevel])
+  @@index([createdAt])
+}
+
+model ThreatReport {
+  id              String   @id @default(uuid())
+  submittedBy     String?
+  targetUrl       String
+  reportedCategory String
+  comment         String?
+  status          String   @default("PENDING_REVIEW") // PENDING_REVIEW, CONFIRMED, REJECTED
+  createdAt       DateTime @default(now())
+
+  @@index([status, createdAt])
+}
+
+// Module 05: Vault Guardian (Zero Knowledge E2EE)
+model VaultItem {
+  id         String   @id @default(uuid())
+  userId     String
+  title      String
+  category   String   @default("PASSWORD") // PASSWORD, SECURE_NOTE, CREDENTIAL
+  ciphertext String   // Encrypted payload
+  iv         String   // Hex / Base64 IV
+  salt       String   // Argon2id / PBKDF2 salt
+  authTag    String   // GCM authentication tag
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, category])
+}
+
+// Module 07: WebShield Scans & Findings
+model WebScan {
+  id               String   @id @default(uuid())
+  assetId          String
+  overallGrade     String   @default("B")
+  sslValid         Boolean  @default(true)
+  hstsEnabled      Boolean  @default(false)
+  cspConfigured    Boolean  @default(false)
+  xFrameOptions    String?
+  rawHeadersJson   String?
+  createdAt        DateTime @default(now())
+
+  asset    Asset            @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  findings WebScanFinding[]
+
+  @@index([assetId, createdAt])
+}
+
+model WebScanFinding {
+  id          String   @id @default(uuid())
+  scanId      String
+  severity    String   @default("MEDIUM") // LOW, MEDIUM, HIGH, CRITICAL
+  title       String
+  description String
+  remediation String?
+  createdAt   DateTime @default(now())
+
+  scan WebScan @relation(fields: [scanId], references: [id], onDelete: Cascade)
+
+  @@index([scanId, severity])
+}
+
+// Module 08: Digital Forensics
+model ForensicCase {
+  id                  String   @id @default(uuid())
+  caseNumber          String   @unique
+  title               String
+  description         String
+  status              String   @default("OPEN") // OPEN, ACTIVE, PENDING_REVIEW, CLOSED
+  leadInvestigatorId  String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  leadInvestigator User?            @relation("LeadInvestigator", fields: [leadInvestigatorId], references: [id], onDelete: SetNull)
+  evidenceRecords  EvidenceRecord[]
+  custodyEvents    CustodyEvent[]
+
+  @@index([caseNumber, status])
+}
+
+model EvidenceRecord {
+  id               String   @id @default(uuid())
+  caseId           String
+  title            String
+  description      String
+  fileName         String
+  fileSizeBytes    BigInt   @default(0)
+  sha256Hash       String
+  mimeType         String
+  storageRef       String
+  uploadedByUserId String
+  createdAt        DateTime @default(now())
+
+  case          ForensicCase   @relation(fields: [caseId], references: [id], onDelete: Cascade)
+  uploadedBy    User           @relation("EvidenceUploader", fields: [uploadedByUserId], references: [id], onDelete: Restrict)
+  custodyEvents CustodyEvent[]
+
+  @@index([caseId, sha256Hash])
+}
+
+model CustodyEvent {
+  id                 String   @id @default(uuid())
+  caseId             String
+  evidenceId         String?
+  action             String   // INGESTION, CUSTODY_TRANSFER, ANALYSIS, DISPOSITION
+  actorUserId        String
+  previousCustodian  String?
+  newCustodian       String?
+  reason             String
+  fileHashSnapshot   String?
+  timestamp          DateTime @default(now())
+
+  case     ForensicCase    @relation(fields: [caseId], references: [id], onDelete: Restrict)
+  evidence EvidenceRecord? @relation(fields: [evidenceId], references: [id], onDelete: Restrict)
+  actor    User            @relation("CustodyActor", fields: [actorUserId], references: [id], onDelete: Restrict)
+
+  @@index([caseId, timestamp])
+  @@index([evidenceId])
+}
+
+// Module 10: Threat Intelligence
+model ThreatIndicator {
+  id              String   @id @default(uuid())
+  type            String   // IP, DOMAIN, URL, FILE_HASH_SHA256, FILE_HASH_MD5
+  value           String
+  severity        String   @default("HIGH") // INFORMATIONAL, LOW, MEDIUM, HIGH, CRITICAL
+  confidenceScore Int      @default(80)
+  source          String   @default("SIS Threat Intelligence Engine")
+  tags            String   // Comma separated
+  description     String?
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([type, value])
+  @@index([type, value])
+  @@index([severity, isActive])
+}
+
+model ThreatFeedSync {
+  id              String   @id @default(uuid())
+  feedName        String
+  status          String   @default("SUCCESS") // SUCCESS, FAILED, PARTIAL
+  indicatorsAdded Int      @default(0)
+  errorMessage    String?
+  syncedAt        DateTime @default(now())
+
+  @@index([feedName, syncedAt])
+}
+
+// Module 11: Cloud Backup Guardian
+model BackupJob {
+  id             String    @id @default(uuid())
+  name           String
+  targetType     String    @default("APPLICATION_DATA") // DATABASE, VAULT_EXPORT, AUDIT_ARCHIVE
+  scheduleCron   String?   @default("0 0 * * *")
+  status         String    @default("COMPLETED") // COMPLETED, RUNNING, FAILED, SCHEDULED
+  fileSizeBytes  BigInt    @default(0)
+  sha256Hash     String?
+  storagePath    String?
+  isEncrypted    Boolean   @default(true)
+  lastRunAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  restoreJobs RestoreJob[]
+
+  @@index([status, targetType])
+}
+
+model RestoreJob {
+  id              String   @id @default(uuid())
+  backupJobId     String
+  status          String   @default("PENDING") // PENDING, VERIFYING, RESTORED, FAILED
+  integrityStatus String   @default("VALID")
+  initiatedBy     String?
+  startedAt       DateTime @default(now())
+  completedAt     DateTime?
+
+  backupJob BackupJob @relation(fields: [backupJobId], references: [id], onDelete: Cascade)
+
+  @@index([backupJobId, status])
+}
+
+// ==========================================
+// 4. SECURITY OPERATIONS CENTER (SOC) & ALERTS
+// ==========================================
+
+enum AlertSeverity {
+  INFORMATIONAL
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum AlertStatus {
+  UNRESOLVED
+  INVESTIGATING
+  RESOLVED
+  FALSE_POSITIVE
+}
+
+enum IncidentStatus {
+  NEW
+  TRIAGED
+  INVESTIGATING
+  CONTAINMENT
+  RESOLVED
+  CLOSED
+}
+
+enum IncidentPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model SecurityAlert {
+  id             String        @id @default(uuid())
+  title          String
+  description    String
+  moduleKey      String
+  severity       AlertSeverity @default(MEDIUM)
+  status         AlertStatus   @default(UNRESOLVED)
+  sourceIp       String?
+  targetResource String?
+  metadataJson   String?       // Additional forensic context
+  incidentId     String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  incident Incident? @relation(fields: [incidentId], references: [id], onDelete: SetNull)
+
+  @@index([status, severity, createdAt])
+  @@index([moduleKey])
+  @@index([incidentId])
+}
+
+model Incident {
+  id             String           @id @default(uuid())
+  incidentNumber String           @unique
+  title          String
+  summary        String
+  status         IncidentStatus   @default(NEW)
+  priority       IncidentPriority @default(MEDIUM)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  closedAt       DateTime?
+
+  alerts      SecurityAlert[]
+  assignments IncidentAssignment[]
+  events      IncidentEvent[]
+  notes       IncidentNote[]
+
+  @@index([status, priority, createdAt])
+  @@index([incidentNumber])
+}
+
+model IncidentAssignment {
+  id         String   @id @default(uuid())
+  incidentId String
+  userId     String
+  assignedAt DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  user     User     @relation("AssignedIncidentUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([incidentId, userId])
+  @@index([incidentId])
+  @@index([userId])
+}
+
+model IncidentEvent {
+  id         String   @id @default(uuid())
+  incidentId String
+  fromStatus String
+  toStatus   String
+  actorId    String?
+  comment    String?
+  timestamp  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, timestamp])
+}
+
+model IncidentNote {
+  id         String   @id @default(uuid())
+  incidentId String
+  authorId   String
+  note       String
+  createdAt  DateTime @default(now())
+
+  incident Incident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  author   User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, createdAt])
+}
+
+// ==========================================
+// 5. SHARED AUDIT, NOTIFICATIONS & SYSTEM
+// ==========================================
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  actorUserId  String?
+  actorEmail   String?
+  action       String
+  resourceType String
+  resourceId   String?
+  outcome      String   @default("SUCCESS") // SUCCESS, FAILURE, DENIED
+  ipAddress    String?
+  userAgent    String?
+  metadataJson String?
+  timestamp    DateTime @default(now())
+
+  actor User? @relation(fields: [actorUserId], references: [id], onDelete: SetNull)
+
+  @@index([actorUserId, timestamp])
+  @@index([action, resourceType])
+  @@index([timestamp])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  severity  String   @default("INFO") // INFO, WARNING, CRITICAL, SUCCESS
+  moduleKey String?
+  isRead    Boolean  @default(false)
+  linkUrl   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+}
+
+model SystemSetting {
+  id          String   @id @default(uuid())
+  key         String   @unique
+  value       String
+  description String?
+  isPublic    Boolean  @default(false)
+  updatedAt   DateTime @updatedAt
+}
+
+model ApiHealthCheck {
+  id            String   @id @default(uuid())
+  serviceName   String
+  status        String   // Healthy, Degraded, Unavailable, Not Configured
+  responseTimeMs Int     @default(0)
+  details       String?
+  timestamp     DateTime @default(now())
+
+  @@index([serviceName, timestamp])
+}

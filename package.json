@@ -1,0 +1,29 @@
+{
+  "name": "sis-cyber-fortress-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "build:contracts": "npm run build --workspace=@sis/api-contracts",
+    "build:api": "npm run build --workspace=@sis/api",
+    "build:web": "npm run build --workspace=@sis/web",
+    "dev:api": "npm run dev --workspace=@sis/api",
+    "dev:web": "npm run dev --workspace=@sis/web",
+    "start:all": "npm run start:all",
+    "test": "npm run test --workspaces --if-present",
+    "prisma:generate": "npm run prisma:generate --workspace=@sis/api",
+    "prisma:migrate": "npm run prisma:migrate --workspace=@sis/api",
+    "prisma:push": "npm run prisma:push --workspace=@sis/api",
+    "prisma:seed": "npm run prisma:seed --workspace=@sis/api",
+    "bootstrap:admin": "npm run bootstrap:admin --workspace=@sis/api",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "rimraf": "^5.0.5"
+  }
+}

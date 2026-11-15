@@ -1,0 +1,245 @@
+﻿SIS CYBER FORTRESS
+12-in-1 Enterprise Cybersecurity Ecosystem
+শিক্ষার্থীদের জন্য পূর্ণাঙ্গ Project Development Assignment
+Project Type
+Real-world, team-based software development
+Platforms
+Android Application + Web Application + Admin Dashboard
+Core Technologies
+Kotlin, Next.js, TypeScript, NestJS, PostgreSQL, Firebase
+Project Standard
+Professional / Enterprise-oriented
+১. Project Overview
+SIS Cyber Fortress একটি সমন্বিত Cybersecurity Ecosystem। এর লক্ষ্য হলো Android App, Web Application, Backend API, Database এবং Super Admin Dashboard-এর মাধ্যমে ১২টি আলাদা Security Module একটি কেন্দ্রীয় প্ল্যাটফর্মে যুক্ত করা। শিক্ষার্থীরা দলগতভাবে নির্ধারিত Module তৈরি করবে এবং শেষে সব Module কেন্দ্রীয় Dashboard-এর সঙ্গে Integration করবে।
+২. Project Objectives
+বাস্তব Software Development Lifecycle অনুসরণ করে একটি কার্যকর Product তৈরি করা।
+Android ও Web Application Development-এর বাস্তব অভিজ্ঞতা অর্জন করা।
+Secure Authentication, Role-Based Access Control (RBAC), API ও Database Integration শেখা।
+১২টি Cybersecurity Module আলাদাভাবে তৈরি করে একটি Unified Platform-এ যুক্ত করা।
+Git/GitHub, Documentation, Testing, Presentation ও Team Collaboration অনুশীলন করা।
+শুধু অনুমোদিত ডিভাইস, ওয়েবসাইট, নেটওয়ার্ক ও ডেটায় নিরাপদ পরীক্ষা করা।
+৩. ১২টি Development Module
+01. SIS Identity Guardian
+Digital identity ও account protection।
+Secure login ও MFA/Passkey interface
+Login activity ও suspicious sign-in alert
+Account security status dashboard
+অনুমোদিত breach-data service দিয়ে compromised credential alert; plaintext password সংগ্রহ নয়
+02. SIS Phishing Shield
+Phishing, scam ও malicious link শনাক্তকরণ।
+URL/link scanner ও risk result
+Suspicious domain warning
+Threat report submission
+Reputation feed/API integration ও false-positive handling
+03. SIS Endpoint Guardian
+Android endpoint/device security monitoring।
+Device registration ও inventory
+Installed app inventory (Android policy অনুযায়ী)
+App permission overview
+Security posture ও compliance dashboard
+04. SIS Network Sentinel
+Wi-Fi ও network security awareness।
+বর্তমান network information (অনুমতি ও OS সীমা অনুযায়ী)
+Open/unsafe Wi-Fi warning
+Network security checklist
+Dashboard-এ device network risk summary
+05. SIS Vault Guardian
+Encrypted password, note ও document vault।
+Encrypted vault ও secure notes
+Biometric/PIN unlock
+Client-side encryption এবং secure key handling
+Vault recovery design; Admin যেন vault-এর plaintext দেখতে না পারে
+06. SIS Ransomware Guardian
+Ransomware risk awareness ও data recovery readiness।
+Backup status ও recovery readiness
+Suspicious file-change indicator যেখানে বৈধভাবে সম্ভব
+Incident alert ও response checklist
+নিরাপদ backup verification; বাস্তব ransomware চালানো যাবে না
+07. SIS WebShield
+অনুমোদিত ওয়েবসাইটের security scanning ও monitoring।
+SSL/TLS certificate status
+DNS ও security header checks
+Safe configuration checks
+Authorized scope-এর vulnerability scan ও remediation report
+08. SIS Digital Forensics
+Security incident evidence ও case management।
+Incident/case creation
+Evidence metadata ও chain-of-custody log
+Timeline ও event correlation
+Evidence access control এবং export report
+09. SIS Access Guardian
+Authentication ও access management।
+MFA ও Passkey support
+Session/device management
+Role ও permission management
+Login history এবং suspicious access alerts
+10. SIS Threat Intelligence
+Cyber threat feed ও indicator management।
+Trusted threat feed integration
+IOC management: domain, URL, IP, hash
+Threat tagging ও severity
+Threat search, report ও source attribution
+11. SIS Cloud Backup Guardian
+Encrypted backup ও recovery management।
+Backup scheduling ও status
+Encrypted file backup
+Restore workflow ও integrity check
+Storage usage, retention ও recovery report
+12. SIS Cyber SOC
+Centralized Security Operations Center।
+Unified alert dashboard
+Incident severity ও prioritization
+Incident assignment ও status workflow
+Module-wise analytics, audit trail ও SOC reports
+৪. Central Super Admin Dashboard – Core Team Task
+একটি Core Team সব ১২টি Module-এর জন্য কেন্দ্রীয় Web Dashboard তৈরি ও পরিচালনা করবে।
+Secure Admin Login, MFA এবং session management।
+Multiple Authorized Administrators: Super Admin, Security Admin, Module Admin এবং Auditor role।
+User Management ও role/permission assignment।
+১২টি Module-এর overview, navigation ও status।
+Device Management, website/project inventory এবং authorized asset registry।
+Security Alerts, Incident Management ও notification center।
+Audit Logs: কে, কখন, কোন action করেছে তার record।
+Reports &amp; Analytics: module status, incidents, scan results ও trends।
+System Settings, API health, integration status এবং backup status।
+সব dashboard data বাস্তব backend/API থেকে আসবে; hardcoded fake statistics ব্যবহার করা যাবে না।
+৫. Recommended Team Distribution
+Team
+Assigned Responsibility
+Team 01
+Identity Guardian
+Team 02
+Phishing Shield
+Team 03
+Endpoint Guardian
+Team 04
+Network Sentinel
+Team 05
+Vault Guardian
+Team 06
+Ransomware Guardian
+Team 07
+WebShield
+Team 08
+Digital Forensics
+Team 09
+Access Guardian
+Team 10
+Threat Intelligence
+Team 11
+Cloud Backup Guardian
+Team 12
+Cyber SOC
+Core Backend Team
+Authentication, API, database, RBAC, notifications
+Dashboard Team
+Central Super Admin Dashboard ও integration UI
+Integration Team
+Module integration, shared services, end-to-end workflows
+QA &amp; Documentation Team
+Testing, bug tracking, security review, manuals ও final report
+শিক্ষার্থীর সংখ্যা অনুযায়ী Team পুনর্বিন্যাস করা যাবে। ছোট দলে একজন শিক্ষার্থী একাধিক দায়িত্ব নিতে পারে। প্রতিটি Module-এর জন্য একজন Team Lead নির্ধারণ করতে হবে।
+৬. Shared Technical Architecture
+Component
+Recommended Technology
+Android App
+Kotlin, Jetpack Compose, Android SDK, Android Keystore, BiometricPrompt, WorkManager
+Web Application
+Next.js, TypeScript, Tailwind CSS
+Backend
+NestJS, TypeScript, REST API; প্রয়োজন হলে WebSocket
+Database
+PostgreSQL, Prisma ORM
+Notifications
+Firebase Cloud Messaging
+Cache / Queue
+Redis (প্রয়োজন অনুযায়ী)
+Version Control
+Git ও GitHub
+Testing
+Unit, integration, API, UI ও security tests
+Deployment
+Environment-based configuration, CI/CD ও managed hosting
+৭. Integration Requirements
+প্রতিটি Module-এর নিজস্ব feature boundary, API contract ও database ownership/documentation থাকতে হবে।
+Shared Authentication, RBAC, audit logging, notification ও user management ব্যবহার করতে হবে।
+প্রতিটি API-তে authentication, authorization, input validation ও error handling থাকতে হবে।
+Module-এর data অন্য Module-এ পাঠানোর আগে প্রয়োজন ও permission যাচাই করতে হবে।
+একটি Module-এর security failure যেন অন্য Module-এ অননুমোদিত access না দেয়।
+সব Module-এর status, alerts ও reports Super Admin Dashboard-এ দেখা যাবে।
+Integration-এর জন্য API documentation এবং test collection জমা দিতে হবে।
+৮. Security, Privacy ও Ethical Rules
+শুধু নিজের বা লিখিত অনুমতি পাওয়া ডিভাইস, ওয়েবসাইট, নেটওয়ার্ক ও অ্যাকাউন্টে পরীক্ষা করা যাবে।
+কোনো unauthorized access, credential theft, stealth surveillance বা data exfiltration করা যাবে না।
+Android-এর permission, Device Owner, OEM বা Bootloader capability জোর করে bypass করা যাবে না।
+অ্যাপের capability Android version, manufacturer ও permission অনুযায়ী ভিন্ন হতে পারে; unsupported feature স্পষ্টভাবে দেখাতে হবে।
+কোনো fake security status, fake scan result বা ভুয়া test pass দেখানো যাবে না।
+Password, private key, biometric data বা secret plaintext আকারে সংরক্ষণ করা যাবে না।
+Vault-এর plaintext content Super Admin বা অন্য Module-এর কাছে প্রকাশ করা যাবে না।
+Location, file access ও device monitoring-এর জন্য user consent ও প্রয়োজনীয় disclosure থাকতে হবে।
+Remote wipe বা destructive operation এই assignment-এর default scope নয়; ভবিষ্যতে যোগ হলে explicit authorization ও confirmation আবশ্যক।
+Security testing হবে safe test data, lab environment এবং অনুমোদিত scope-এ।
+৯. প্রতিটি Team-এর বাধ্যতামূলক Deliverables
+Project Requirement &amp; Planning Document
+Use Case / User Flow / Architecture Diagram
+UI/UX Design অথবা Screen Prototype
+Functional Application / Module
+Backend API ও Database Integration
+Database Schema / Migration (যদি প্রযোজ্য হয়)
+GitHub Repository ও নিয়মিত Commit History
+README ও Installation Instructions
+Unit/Integration Test এবং Test Report
+Security &amp; Privacy Checklist
+Known Limitations ও Future Improvements
+Final Presentation এবং Live Demonstration
+১০. Evaluation &amp; Marking Scheme
+Evaluation Criteria
+Marks
+UI/UX Design
+10
+Core Functionality
+20
+Backend &amp; Database
+15
+Security &amp; Privacy Implementation
+20
+API / Module Integration
+10
+Testing &amp; Quality
+10
+Documentation
+5
+Presentation &amp; Viva
+10
+TOTAL
+100
+১১. Suggested Project Milestones
+Milestone 1 – Requirement &amp; Planning
+Module scope, team roles, user stories, architecture ও wireframes।
+Milestone 2 – UI/UX &amp; Foundation
+Initial Android/Web screens, repository, backend skeleton ও database design।
+Milestone 3 – Core Functionality
+প্রতিটি Module-এর primary workflow কার্যকর করা।
+Milestone 4 – API &amp; Database Integration
+Frontend, backend, database এবং notification সংযোগ।
+Milestone 5 – Central Dashboard Integration
+সব Module-এর status, alerts ও reports কেন্দ্রীয় dashboard-এ যুক্ত করা।
+Milestone 6 – QA &amp; Security Review
+Bug fixing, permission review, safe security tests ও documentation।
+Milestone 7 – Final Demo &amp; Submission
+Working demo, source code, reports, presentation ও viva।
+প্রশিক্ষক/Project Coordinator প্রয়োজন অনুযায়ী প্রতিটি Milestone-এর তারিখ ও সময়সীমা নির্ধারণ করবেন।
+১২. Final Submission Checklist
+☐ Working module demonstration
+☐ Source code repository link
+☐ Application build / web deployment link (যেখানে প্রযোজ্য)
+☐ Database schema and migration files
+☐ API documentation
+☐ Test and security report
+☐ Setup and user guide
+☐ Known limitations list
+☐ Team presentation slides
+☐ Final project handover
+১৩. Student Project Notice
+সকল শিক্ষার্থীকে জানানো যাচ্ছে যে, SIS Cyber Fortress নামে একটি বাস্তবভিত্তিক Enterprise Cybersecurity Ecosystem Development Project শুরু করা হচ্ছে। এই Project-এ ১২টি Security Module, Android ও Web Application, Backend API, Database এবং Central Super Admin Dashboard তৈরি ও Integrate করতে হবে। প্রত্যেক Team-কে নির্ধারিত Module-এর কাজ সম্পন্ন করে Source Code, Documentation, Test Report এবং Live Demonstration জমা দিতে হবে। সকল কাজ অনুমোদিত ও নিরাপদ পরিবেশে সম্পন্ন করতে হবে।
+PROJECT: SIS CYBER FORTRESS  |  ENTERPRISE CYBERSECURITY ECOSYSTEM

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "101633309647992059694",
+    "project_id": "sis-cyber-fortress-6dbff",
+    "storage_bucket": "sis-cyber-fortress-6dbff.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:101633309647992059694:android:d84f932bf52c8010",
+        "android_client_info": {
+          "package_name": "com.sis.cyberfortress"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD-PlaceholderKey-ChangeIfGeneratingDirectlyFromFirebaseConsole"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
