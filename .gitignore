@@ -10,6 +10,7 @@ coverage/
 
 # Production Builds
 dist/
+!packages/api-contracts/dist/**
 build/
 .next/
 out/
